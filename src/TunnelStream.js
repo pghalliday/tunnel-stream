@@ -1,11 +1,15 @@
 var Stream = require('stream'),
     util = require('util');
 
-function Tunnel() {
+function Tunnel(options) {
+  options = options || {};
+
   function EndPoint(otherEnd) {
     var self = this,
         paused = false,
-        events = [];
+        events = [],
+        encoding,
+        messageBuffer = new Buffer(0);
 
     if (otherEnd) {
       otherEnd.pair(self);
@@ -22,11 +26,15 @@ function Tunnel() {
       paused = true;
     };
 
+    self.emitEvent = function(name, data) {
+      self.emit(name, data ? (self.encoding ? data.toString(self.encoding) : data) : data);        
+    };
+
     self.resume = function(discardEvents) {
       paused = false;
       while (events.length > 0) {
         var event = events.shift();
-        self.emit(event.name, event.data);        
+        self.emitEvent(event.name, event.data);        
       }
     };
     
@@ -41,27 +49,42 @@ function Tunnel() {
           data: data
         });
         if (name === 'data') {
-          self.emit('pausedData', data);
+          self.emitEvent('pausedData', data);
         }
       } else {
-        self.emit(name, data);
+        self.emitEvent(name, data);
       }      
     };
 
-    self.write = function(data) {
-      otherEnd.emitOrBuffer('data', data);
+    self.write = function(data, encoding) {
+      if (typeof data === 'string') {
+        data = new Buffer(data, encoding);
+      }
+      if (options.messageSize) {
+        messageBuffer = Buffer.concat([messageBuffer, data], messageBuffer.length + data.length);
+        while (messageBuffer.length >= options.messageSize) {
+          otherEnd.emitOrBuffer('data', messageBuffer.slice(0, 5));
+          messageBuffer = messageBuffer.slice(5);
+        }
+      } else {
+        otherEnd.emitOrBuffer('data', data);  
+      }
     };
     
-    self.end = function(data) {
+    self.end = function(data, encoding) {
       if (data) {
-        otherEnd.emitOrBuffer('data', data);
+        self.write(data, encoding);
+      }
+      if (messageBuffer.length) {
+        otherEnd.emitOrBuffer('data', messageBuffer);
+        messageBuffer = new Buffer(0);
       }
       otherEnd.emitOrBuffer('end');
       self.emitOrBuffer('end');
     };
     
     self.setEncoding = function(encoding) {
-      // This is only here to allow for tests and those tests always submit strings as utf8
+      self.encoding = encoding || 'utf8';
     };
   }
   util.inherits(EndPoint, Stream);

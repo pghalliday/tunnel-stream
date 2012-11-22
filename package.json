@@ -1,7 +1,7 @@
 {
   "name": "tunnel-stream",
   "description": "A test tunnel stream to simulate intermediate streams with different characteristics",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "homepage": "https://github.com/pghalliday/tunnel-stream.git",
   "author": {
     "name": "Peter Halliday",
