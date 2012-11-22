@@ -55,7 +55,7 @@ tunnel.upstream.write('hello, downstream');
 
 To use pause and resume
 
-```
+```javascript
 var tunnel = new TunnelStream();
 
 tunnel.downstream.setEncoding('utf8');
@@ -79,7 +79,7 @@ tunnel.upstream.write('after discarded');
 
 To set the message size
 
-```
+```javascript
 var tunnel = new TunnelStream({
   messageSize: 5
 });
