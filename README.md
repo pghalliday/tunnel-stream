@@ -15,6 +15,8 @@ A test tunnel stream to simulate intermediate streams with different characteris
 - should support the setEncoding method
 - should emit end events on both streams on end from one side
 - should optionally rewrite data events into specified message sizes
+- #flush
+  - should flush any unwritten buffered data due to a messageSize setting
 
 ## Installation
 
@@ -107,7 +109,11 @@ tunnel.downstream.on('end', function() {
 
 tunnel.upstream.write('This is a test');
 tunnel.upstream.write('This is also a test');
-tunnel.upstream.end('ok that is all'); // must end the connection to flush the last few bytes
+tunnel.upstream.end('ok that is all'); // ending the connection will flush the last few bytes
+
+// it is also possible to flush the last few bytes from the tunnel without ending the stream
+// by calling the flush method, eg...
+tunnel.upstream.flush();
 ```
 
 ## Roadmap

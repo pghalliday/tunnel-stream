@@ -204,4 +204,32 @@ describe('TunnelStream', function() {
     tunnel.upstream.write('This is also a test');
     tunnel.upstream.end('ok that is all');
   });
+
+  describe('#flush', function() {
+    it('should flush any unwritten buffered data due to a messageSize setting', function(done) {
+      var checklist = new Checklist([
+        'This ',
+        'is a ',
+        'testT',
+        'his i',
+        's als',
+        'o a t',
+        'estok',
+        ' that',
+        ' is a',
+        'll'
+      ], done);
+      var tunnel = new TunnelStream({
+        messageSize: 5
+      });
+      tunnel.downstream.setEncoding('utf8');
+      tunnel.downstream.on('data', function(data) {
+        checklist.check(data);
+      });
+      tunnel.upstream.write('This is a test');
+      tunnel.upstream.write('This is also a test');
+      tunnel.upstream.write('ok that is all');
+      tunnel.upstream.flush();
+    });
+  });
 });

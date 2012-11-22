@@ -70,21 +70,25 @@ function Tunnel(options) {
         otherEnd.emitOrBuffer('data', data);  
       }
     };
-    
+
     self.end = function(data, encoding) {
       if (data) {
         self.write(data, encoding);
       }
-      if (messageBuffer.length) {
-        otherEnd.emitOrBuffer('data', messageBuffer);
-        messageBuffer = new Buffer(0);
-      }
+      self.flush();
       otherEnd.emitOrBuffer('end');
       self.emitOrBuffer('end');
     };
     
     self.setEncoding = function(encoding) {
       self.encoding = encoding || 'utf8';
+    };
+
+    self.flush = function() {
+      if (messageBuffer.length) {
+        otherEnd.emitOrBuffer('data', messageBuffer);
+        messageBuffer = new Buffer(0);
+      }
     };
   }
   util.inherits(EndPoint, Stream);
